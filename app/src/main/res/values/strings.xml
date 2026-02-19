@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">My Application</string>
+
+<!--EXAMPLES FROM TEACHER-->
+<!--    <string name="item_random">Random Item</string>-->
+<!--    <string name="item_category">Categories</string>-->
+<!--    <string name="item_favorite">Favorites</string>-->
+</resources>
