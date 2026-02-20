@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import fr.nicolaeoctavianmihaila.myapplication.dataClasses.Drink
 import fr.nicolaeoctavianmihaila.myapplication.screens.CocktailScreen
 import fr.nicolaeoctavianmihaila.myapplication.ui.theme.MyApplicationTheme
 
@@ -22,7 +23,13 @@ class DetailCocktailActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CocktailScreen ( Modifier.padding(innerPadding))
+                    val dummyDrink = Drink(
+                        idDrink = "1",
+                        strDrink = "Loading...",
+                        strDrinkThumb = null,
+                        strInstructions = ""
+                    )
+                    CocktailScreen ( Modifier.padding(innerPadding) , drink = dummyDrink)
                 }
             }
         }

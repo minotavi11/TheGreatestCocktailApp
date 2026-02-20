@@ -42,7 +42,7 @@ fun BottomAppNavBar(navController: NavController) {
     val context = LocalContext.current
     Row(modifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 30.dp)
+        .padding(bottom = 55.dp)
         .padding(horizontal = 5.dp)
         .background(color = Color.Gray.copy(alpha=0.7f), shape = RoundedCornerShape(100.dp))
         .height(55.dp),
@@ -105,9 +105,7 @@ fun BottomAppNavBar(navController: NavController) {
             )
         )
         { Column(
-            // Center the content horizontally within the Column.
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Center the content vertically within the space the Column takes.
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
         )
         {

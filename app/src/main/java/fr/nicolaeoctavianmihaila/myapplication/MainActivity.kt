@@ -44,6 +44,7 @@
     import androidx.navigation.compose.composable
     import androidx.navigation.compose.currentBackStackEntryAsState
     import androidx.navigation.compose.rememberNavController
+    import fr.nicolaeoctavianmihaila.myapplication.dataClasses.Drink
     import fr.nicolaeoctavianmihaila.myapplication.screens.BottomAppNavBar
     import fr.nicolaeoctavianmihaila.myapplication.screens.CategoriesScreen
     import fr.nicolaeoctavianmihaila.myapplication.screens.CocktailScreen
@@ -189,7 +190,13 @@
                                         CategoriesScreen(modifier = Modifier, navController = navController)
                                     }
                                     composable(Routes.Details){
-                                        CocktailScreen(modifier = Modifier)
+                                        val dummyDrink = Drink(
+                                            idDrink = "1",
+                                            strDrink = "Loading...",
+                                            strDrinkThumb = null,
+                                            strInstructions = ""
+                                        )
+                                        CocktailScreen(modifier = Modifier, drink = dummyDrink)
                                     }
                                     composable(Routes.Drinks){
                                         DrinksScreen(modifier = Modifier, navController=navController)

@@ -40,43 +40,80 @@ import androidx.compose.ui.unit.sp
 import fr.nicolaeoctavianmihaila.myapplication.R
 import android.widget.Toast
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
+import fr.nicolaeoctavianmihaila.myapplication.dataClasses.Drink
+import fr.nicolaeoctavianmihaila.myapplication.network.NetworkManager
 
-@Preview( showSystemUi = true)//main composable for the app screen xD
+
 @Composable
-    fun CocktailScreen(modifier: Modifier = Modifier){
+    fun CocktailScreen(modifier: Modifier = Modifier, drink:Drink ){
+    val context = LocalContext.current
+    var drinkState by remember { mutableStateOf<Drink?>(null) }
 
-        Column(modifier = Modifier.fillMaxSize()
-            .padding(top =50.dp, start = 16.dp , end = 16.dp )
-            .verticalScroll(rememberScrollState())
-        )
-        {
-            CocktailHeader()
-            CocktailCategoryButtons()
-            CocktailGlassInfo()
-            IngredientsCard()
+    // 2. Launch the network call
+    LaunchedEffect(Unit) {
+        if (drinkState == null) {
+            try {
+                val response = NetworkManager.apiService.GetRandomCocktail()
+                drinkState = response.drinks?.firstOrNull()
+            } catch (e: Exception) {
+                e.printStackTrace() // Log errors to Logcat
+            }
         }
+    }
+        val currentDrink = drinkState
+        if (currentDrink == null) {
 
+            Toast.makeText(
+                context,
+                "Loading Random Cocktail...",
+                Toast.LENGTH_SHORT
+            ).show()
 
+        } else {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(top = 50.dp, start = 16.dp, end = 16.dp)
+                    .verticalScroll(rememberScrollState())
+            )
+            {
+                CocktailHeader(currentDrink)
+                CocktailCategoryButtons(currentDrink)
+                CocktailGlassInfo(currentDrink)
+                IngredientsCard(currentDrink)
+                PreparationCard(currentDrink)
+            }
+        }
+    }
 
-}
 
 
 ////////////
 @Composable
-fun  CocktailHeader(modifier: Modifier = Modifier){
-    Column(modifier = modifier.fillMaxWidth(),   horizontalAlignment=(Alignment.CenterHorizontally)
+fun  CocktailHeader(drink: Drink){
+    Column(modifier = Modifier.fillMaxWidth(),   horizontalAlignment=(Alignment.CenterHorizontally)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.wine),
-            contentDescription = "Cocktail",
+        AsyncImage(
+            model=drink.strDrinkThumb,
+            contentDescription = drink.strDrink,
+            placeholder = painterResource(id = R.drawable.wine),
             modifier = Modifier
                 .size(300.dp)
-                .clip(RoundedCornerShape(24.dp)),
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
         )
         Text(
-            text = "Romanian Wine",
+            text = drink.strDrink ?: "Unknown Drink",
             fontSize = 35.sp,
             modifier = Modifier, color=Color.White
         )
@@ -86,9 +123,11 @@ fun  CocktailHeader(modifier: Modifier = Modifier){
 
 ///////////
 @Composable
-fun CocktailCategoryButtons(modifier: Modifier = Modifier){
+fun CocktailCategoryButtons(drink: Drink){
     Row(
-        modifier = modifier.fillMaxWidth().padding(bottom = 16.dp,), horizontalArrangement=Arrangement.Center
+         Modifier
+             .fillMaxWidth()
+             .padding(bottom = 16.dp,), horizontalArrangement=Arrangement.Center
     ) {
         Button(
             onClick = { /*TODO*/ },
@@ -135,8 +174,8 @@ fun CocktailCategoryButtons(modifier: Modifier = Modifier){
 
 /////////
 @Composable
-fun CocktailGlassInfo(modifier: Modifier = Modifier){
-    Row(modifier = modifier.fillMaxWidth(),horizontalArrangement=Arrangement.Center
+fun CocktailGlassInfo(drink: Drink){
+    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.warmdrink),
@@ -151,7 +190,6 @@ fun CocktailGlassInfo(modifier: Modifier = Modifier){
             fontWeight = FontWeight.Thin,
             fontStyle = FontStyle.Italic,
             color=Color.White,
-            modifier = modifier
         )
     }
 
@@ -161,12 +199,12 @@ fun CocktailGlassInfo(modifier: Modifier = Modifier){
 
 /////////
 @Composable
-fun IngredientsCard(modifier: Modifier = Modifier) {
+fun IngredientsCard(drink: Drink) {
     Card(
-        modifier = modifier
+        Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .padding(top=16.dp, bottom=10.dp)
+            .padding(top = 16.dp, bottom = 10.dp)
             .border(
                 width = 3.dp,
                 color = Color.White,
@@ -175,60 +213,71 @@ fun IngredientsCard(modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = Color.LightGray.copy(alpha = 0.7f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)
+        Column(modifier = Modifier
+            .padding(16.dp)
             .align(Alignment.CenterHorizontally) // center title
         ) {
             Text(
                 text = "Ingredients",
                 color = Color.White,
-                fontSize = 40.sp,
+                fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
             )
 
             Spacer(modifier = Modifier.height(16.dp)) // spacing between title and rows
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // Left Column
-                Column(modifier = Modifier.weight(1f)) {
+            drink.ingredientList().forEach { (ingredient, measure) ->
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)) {
                     Text(
-                        text = "Grapes",
+                        text = ingredient, // Now this reference is resolved!
+                        modifier = Modifier.weight(1f),
                         color = Color.White,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Thin,
+                        fontSize = 18.sp,
                         fontStyle = FontStyle.Italic
                     )
                     Text(
-                        text = "Passion!",
+                        text = measure, // Now this reference is resolved!
                         color = Color.White,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Thin,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
-
-                // Right Column
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.End // align numbers to the right
-                ) {
-                    Text(
-                        text = "100%",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Thin,
-                        fontStyle = FontStyle.Italic
-                    )
-                    Text(
-                        text = "100001%",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Thin,
-                        fontStyle = FontStyle.Italic
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
+            }
         }
     }
+
+
+@Composable
+fun PreparationCard(drink: Drink) {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(top = 16.dp, bottom = 10.dp)
+            .border(
+                width = 3.dp,
+                color = Color.White,
+                shape = RoundedCornerShape(10.dp)
+            ),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.LightGray.copy(alpha = 0.7f))
+    ) {
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .align(Alignment.CenterHorizontally)) {
+            Text(
+                text = "Preparation",
+                color = Color.White,
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(text = drink.strInstructions ?: "No instructions provided.")
+            }
+        }
 }
+
+
+
+
