@@ -55,36 +55,48 @@ import fr.nicolaeoctavianmihaila.myapplication.network.NetworkManager
 
 
 @Composable
-    fun CocktailScreen(modifier: Modifier = Modifier, drink:Drink ){
+    fun CocktailScreen(modifier: Modifier = Modifier, drinkId: String? = null , onDrinkLoaded: (Drink) -> Unit = {}){
     val context = LocalContext.current
     var drinkState by remember { mutableStateOf<Drink?>(null) }
 
-    // 2. Launch the network call
-    LaunchedEffect(Unit) {
-        if (drinkState == null) {
-            try {
-                val response = NetworkManager.apiService.GetRandomCocktail()
-                drinkState = response.drinks?.firstOrNull()
-            } catch (e: Exception) {
-                e.printStackTrace() // Log errors to Logcat
+    LaunchedEffect(drinkId) {
+        try {
+            val response = if (drinkId != null && drinkId != "random") {
+                NetworkManager.apiService.getDrinkID(drinkId) //specific drink
+            } else {
+                NetworkManager.apiService.GetRandomCocktail() //random drink
             }
+            drinkState = response.drinks?.firstOrNull()
+
+
+            drinkState?.let { onDrinkLoaded(it) }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
         val currentDrink = drinkState
         if (currentDrink == null) {
-
-            Toast.makeText(
-                context,
-                "Loading Random Cocktail...",
-                Toast.LENGTH_SHORT
-            ).show()
+            if(drinkId=="random") {
+                Toast.makeText(
+                    context,
+                    "Loading Random Cocktail...",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else{
+                Toast.makeText(
+                    context,
+                    "Loading Cocktail...",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
 
         } else {
             Column(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(top = 50.dp, start = 16.dp, end = 16.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState()) //so me can scroll down
             )
             {
                 CocktailHeader(currentDrink)
@@ -123,14 +135,16 @@ fun  CocktailHeader(drink: Drink){
 
 ///////////
 @Composable
-fun CocktailCategoryButtons(drink: Drink){
+fun CocktailCategoryButtons(drink: Drink) {
     Row(
-         Modifier
-             .fillMaxWidth()
-             .padding(bottom = 16.dp,), horizontalArrangement=Arrangement.Center
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.Center
     ) {
+        // Dynamic Category Button
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { },
             shape = RectangleShape,
             modifier = Modifier
                 .padding(5.dp)
@@ -139,60 +153,58 @@ fun CocktailCategoryButtons(drink: Drink){
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.tag),
-                contentDescription = "Sample Icon",
+                contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(15.dp)
             )
-
-            Text(text = "Other/Unknown", fontSize = 12.sp, color = Color.White)
-
+            Text(text = drink.strCategory ?: "Category", fontSize = 12.sp, color = Color.White)
         }
 
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {},
             shape = RectangleShape,
             modifier = Modifier
                 .padding(5.dp)
                 .size(150.dp, 45.dp)
                 .clip(RoundedCornerShape(24.dp))
         ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.drink),
-                    contentDescription = "Sample Icon",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            Text(text = "Non-Alcoholic", fontSize = 12.sp, color = Color.White)
+            Icon(
+                painter = painterResource(id = R.drawable.drink),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(text = drink.strAlcoholic ?: "Alcoholic", fontSize = 12.sp, color = Color.White)
         }
-
-
-
     }
-
 }
-
 
 /////////
 @Composable
-fun CocktailGlassInfo(drink: Drink){
-    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.Center
+fun CocktailGlassInfo(drink: Drink) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             painter = painterResource(id = R.drawable.warmdrink),
-            contentDescription = "Sample Icon",
+            contentDescription = "Glass Icon",
             tint = Color.White,
             modifier = Modifier.size(15.dp)
         )
 
+        Spacer(modifier = Modifier.size(8.dp))
+
+        // DYNAMIC TEXT: drink.strGlass
         Text(
-            text = "Special Wine Glass",
+            text = drink.strGlass ?: "Standard Glass",
             fontSize = 20.sp,
             fontWeight = FontWeight.Thin,
             fontStyle = FontStyle.Italic,
-            color=Color.White,
+            color = Color.White,
         )
     }
-
 }
 
 

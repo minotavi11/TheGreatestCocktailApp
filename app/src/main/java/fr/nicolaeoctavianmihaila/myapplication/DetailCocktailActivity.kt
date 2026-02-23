@@ -20,16 +20,11 @@ class DetailCocktailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val drinkId = intent.getStringExtra("DRINK_ID")
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val dummyDrink = Drink(
-                        idDrink = "1",
-                        strDrink = "Loading...",
-                        strDrinkThumb = null,
-                        strInstructions = ""
-                    )
-                    CocktailScreen ( Modifier.padding(innerPadding) , drink = dummyDrink)
+                    CocktailScreen(Modifier.padding(innerPadding), drinkId = drinkId)
                 }
             }
         }

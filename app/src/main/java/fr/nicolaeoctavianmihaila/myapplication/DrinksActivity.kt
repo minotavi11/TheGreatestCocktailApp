@@ -19,12 +19,13 @@ class DrinksActivity : ComponentActivity(){
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
+            val catName = intent.getStringExtra("CATEGORY_NAME") ?: "Cocktail"
             val navController = rememberNavController()
             MyApplicationTheme() {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     innerPadding ->
 
-                    DrinksScreen(Modifier.padding(innerPadding), navController = navController)
+                    DrinksScreen(Modifier.padding(innerPadding), navController = navController, categoryName = catName )
                 }
             }
         }

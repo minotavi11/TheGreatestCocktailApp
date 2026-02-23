@@ -5,7 +5,7 @@ object Routes {
     var Categories = "CategoriesScreen"
     var Favorites = "FavoritesScreen"
     var Details = "DetailedCocktailScreen"
-    var Drinks = "DrinksScreen"
+    var Drinks = "drinks/{categoryName}"
 }
 
 

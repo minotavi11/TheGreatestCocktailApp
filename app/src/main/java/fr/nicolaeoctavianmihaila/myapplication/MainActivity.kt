@@ -1,5 +1,6 @@
     package fr.nicolaeoctavianmihaila.myapplication
 
+    import android.net.Uri
     import android.os.Bundle
     import android.widget.Toast
     import androidx.activity.ComponentActivity
@@ -30,6 +31,9 @@
     import androidx.compose.material3.TopAppBarDefaults
     import androidx.compose.runtime.Composable
     import androidx.compose.runtime.getValue
+    import androidx.compose.runtime.mutableStateOf
+    import androidx.compose.runtime.remember
+    import androidx.compose.runtime.setValue
     import androidx.compose.ui.Modifier
     import androidx.compose.ui.graphics.Brush
     import androidx.compose.ui.graphics.Color
@@ -45,6 +49,7 @@
     import androidx.navigation.compose.currentBackStackEntryAsState
     import androidx.navigation.compose.rememberNavController
     import fr.nicolaeoctavianmihaila.myapplication.dataClasses.Drink
+    import fr.nicolaeoctavianmihaila.myapplication.managers.FavoritesManager
     import fr.nicolaeoctavianmihaila.myapplication.screens.BottomAppNavBar
     import fr.nicolaeoctavianmihaila.myapplication.screens.CategoriesScreen
     import fr.nicolaeoctavianmihaila.myapplication.screens.CocktailScreen
@@ -65,17 +70,33 @@
             super.onCreate(savedInstanceState)
             enableEdgeToEdge()
             setContent {
+                // navigation stuff
                 val navController = rememberNavController()
+                val favoritesManager = FavoritesManager()
+                val context = LocalContext.current
+
+                var currentDrinkInView by remember { mutableStateOf<Drink?>(null) }
+
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val drinkId = navBackStackEntry?.arguments?.getString("drinkId")
                 val currentRoute = navBackStackEntry?.destination?.route
-                var nameScreen = when (currentRoute) {
-                    Routes.Home -> "Home"
-                    Routes.Categories -> "Categories"
-                    Routes.Favorites -> "Favorites"
-                    Routes.Details -> "Drink Details"
-                    Routes.Drinks -> "Drinks"
+
+
+                // screen checking
+                val isOnDetailsScreen = currentRoute?.startsWith(Routes.Details) == true
+                val isRandomMode = isOnDetailsScreen && drinkId == "random"
+                val isSpecificDrink = isOnDetailsScreen && drinkId != null && drinkId != "random"
+
+                var nameScreen = when  {
+                    currentRoute == Routes.Home -> "Home"
+                    currentRoute == Routes.Categories -> "Categories"
+                    currentRoute == Routes.Favorites -> "Favorites"
+                    isRandomMode -> "Random Cocktail"
+                    isSpecificDrink -> "Drink Details"
+                    currentRoute?.startsWith(Routes.Drinks) == true -> "Drinks"
                     else -> "Cocktail App"
                 }
+
                 MyApplicationTheme {
                     Box(
                         modifier = Modifier
@@ -121,39 +142,39 @@
                                             )
                                         }
 
-                                        if (currentRoute == Routes.Details) {
-                                        IconButton(
-                                            onClick = { /*TODO*/ },
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .size(50.dp)
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.undo),
-                                                contentDescription = "Sample Icon",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(40.dp)
-                                            )
-                                        }
-
+                                        if (isOnDetailsScreen) {
                                             IconButton(
                                                 onClick = {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Added to Favorites!",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
+                                                    navController.popBackStack()
                                                 },
                                                 modifier = Modifier
                                                     .padding(5.dp)
                                                     .size(50.dp)
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(id = R.drawable.favorite),
-                                                    contentDescription = "Sample Icon",
+                                                    painter = painterResource(id = R.drawable.undo),
+                                                    contentDescription = "Back",
                                                     tint = Color.White,
                                                     modifier = Modifier.size(40.dp)
                                                 )
+                                            }
+
+                                            currentDrinkInView?.let { drink ->
+                                                IconButton(
+                                                    onClick = {
+                                                        favoritesManager.toggleFavorite(drink, context)
+                                                        currentDrinkInView = drink.copy()
+                                                        Toast.makeText(context, "Favorites updated!", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                ) {
+                                                    val isFav = favoritesManager.isFavorite(drink, context)
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.favorite),
+                                                        contentDescription = "Favorite",
+                                                        tint = if (isFav) Color.Red else Color.White, // is favorited
+                                                        modifier = Modifier.size(40.dp)
+                                                    )
+                                                }
                                             }
                                         }
 
@@ -189,20 +210,24 @@
                                     composable(Routes.Categories){
                                         CategoriesScreen(modifier = Modifier, navController = navController)
                                     }
-                                    composable(Routes.Details){
-                                        val dummyDrink = Drink(
-                                            idDrink = "1",
-                                            strDrink = "Loading...",
-                                            strDrinkThumb = null,
-                                            strInstructions = ""
+                                    composable("${Routes.Details}/{drinkId}") { backStackEntry ->
+
+                                        val drinkId = backStackEntry.arguments?.getString("drinkId")
+
+                                        CocktailScreen(
+                                            modifier = Modifier,
+                                            drinkId = drinkId,
+                                            onDrinkLoaded = { drink -> currentDrinkInView = drink } // get the drink
                                         )
-                                        CocktailScreen(modifier = Modifier, drink = dummyDrink)
                                     }
-                                    composable(Routes.Drinks){
-                                        DrinksScreen(modifier = Modifier, navController=navController)
+                                    composable("${Routes.Drinks}/{categoryName}"){
+                                        backStackEntry ->
+                                        val catName = backStackEntry.arguments?.getString("categoryName") ?: "Cocktail"
+                                        val decodedCatName = Uri.decode(catName)
+                                        DrinksScreen(modifier = Modifier, navController=navController, categoryName = decodedCatName)
                                     }
                                     composable(Routes.Favorites){
-                                        FavoritesScreen(modifier = Modifier)
+                                        FavoritesScreen(modifier = Modifier, navController = navController)
                                     }
 
                                 })
@@ -215,9 +240,3 @@
             }
         }
     }
-
-
-
-
-
-

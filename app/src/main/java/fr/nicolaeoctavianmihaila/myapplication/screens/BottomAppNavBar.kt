@@ -32,7 +32,11 @@ import fr.nicolaeoctavianmihaila.myapplication.TabBarItem
 @Composable
 fun BottomAppNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val arguments = navBackStackEntry?.arguments
+    val drinkIdArg = arguments?.getString("drinkId")
+
     val currentRoute = navBackStackEntry?.destination?.route
+    val isRandomSelected = currentRoute?.startsWith("DetailedCocktailScreen") == true && drinkIdArg == "random"
 
     // Define colors for selected and unselected states to reuse them
     val selectedButtonColor = Color(0xFF5A189A) // A deep purple for selection
@@ -97,11 +101,11 @@ fun BottomAppNavBar(navController: NavController) {
                 Text(text = "Favorites")
             }
         }
-        val isDetailsSelected = currentRoute == "DetailedCocktailScreen"
+        val isRandomSelected = currentRoute?.startsWith("DetailedCocktailScreen") == true && drinkIdArg == "random"
         Button(
-            onClick = { navController.navigate("DetailedCocktailScreen") },
+            onClick = { navController.navigate("DetailedCocktailScreen/random") },
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isDetailsSelected) selectedButtonColor else unselectedButtonColor
+                containerColor = if (isRandomSelected) selectedButtonColor else unselectedButtonColor
             )
         )
         { Column(

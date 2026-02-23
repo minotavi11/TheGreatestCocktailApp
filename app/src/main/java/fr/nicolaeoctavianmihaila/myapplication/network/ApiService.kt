@@ -5,7 +5,7 @@ import retrofit2.Call //TAKE THE CODE OF RETROFIT
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface ApiService {
+interface   ApiService {
     @GET("random.php")
     suspend fun GetRandomCocktail():CocktailResponse //we use the data class
 
@@ -13,9 +13,9 @@ interface ApiService {
     suspend fun getCategories():CategoryListResponse
 
     @GET(value = "filter.php") //filter.php?c=YOUR_CATEGORY
-    suspend fun getDrinkType(@Query("c") categoryID: String = "list"): CocktailResponse
+    suspend fun getDrinkType(@Query("c") categoryID: String = "list"):DrinkFilterResponse
 
     @GET(value ="lookup.php") //lookup.php?i=YOUR_DRINK_IDENTIFIER
-   suspend fun getDrinkDetails(@Query("i") drinkID: String):DrinkFilterResponse
+   suspend fun getDrinkID(@Query("i") drinkID: String):CocktailResponse
 
 }
